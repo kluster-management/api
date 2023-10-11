@@ -77,7 +77,7 @@ func (in ClusterGroupsMap) DeepCopyInto(out *ClusterGroupsMap) {
 				(*out)[key] = nil
 			} else {
 				in, out := &val, &outVal
-				*out = make(sets.Set[string], len(*in))
+				*out = make(sets.String, len(*in))
 				for key, val := range *in {
 					(*out)[key] = val
 				}

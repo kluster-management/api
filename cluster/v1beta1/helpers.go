@@ -33,7 +33,7 @@ type GroupKey struct {
 // NewPlacementDecisionClustersTracker initializes a PlacementDecisionClustersTracker
 // using existing clusters. Clusters are added to the default cluster group with index 0.
 // Set existingScheduledClusters to nil if there are no existing clusters.
-func NewPlacementDecisionClustersTracker(placement *Placement, pdl PlacementDecisionGetter, existingScheduledClusters sets.Set[string]) *PlacementDecisionClustersTracker {
+func NewPlacementDecisionClustersTracker(placement *Placement, pdl PlacementDecisionGetter, existingScheduledClusters sets.String) *PlacementDecisionClustersTracker {
 	pdct := &PlacementDecisionClustersTracker{
 		placement:                      placement,
 		placementDecisionGetter:        pdl,
@@ -78,7 +78,7 @@ func (pdct *PlacementDecisionClustersTracker) Refresh() error {
 	}
 
 	// Get the decision cluster names and groups
-	newScheduledClusterGroups := map[GroupKey]sets.Set[string]{}
+	newScheduledClusterGroups := map[GroupKey]sets.String{}
 	for _, d := range decisions {
 		groupKey, err := parseGroupKeyFromDecision(d)
 		if err != nil {
@@ -86,7 +86,7 @@ func (pdct *PlacementDecisionClustersTracker) Refresh() error {
 		}
 
 		if _, exist := newScheduledClusterGroups[groupKey]; !exist {
-			newScheduledClusterGroups[groupKey] = sets.New[string]()
+			newScheduledClusterGroups[groupKey] = sets.NewString()
 		}
 
 		for _, sd := range d.Status.Decisions {
@@ -102,7 +102,7 @@ func (pdct *PlacementDecisionClustersTracker) Refresh() error {
 }
 
 // GetClusterChanges updates the tracker's decisionClusters and returns added and deleted cluster names.
-func (pdct *PlacementDecisionClustersTracker) GetClusterChanges() (sets.Set[string], sets.Set[string], error) {
+func (pdct *PlacementDecisionClustersTracker) GetClusterChanges() (sets.String, sets.String, error) {
 	// Get existing clusters
 	existingScheduledClusters := pdct.existingScheduledClusterGroups.GetClusters()
 
@@ -149,7 +149,7 @@ func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroups(groupKeys ..
 	pdct.lock.RLock()
 	defer pdct.lock.RUnlock()
 
-	resultClusterGroups := make(map[GroupKey]sets.Set[string])
+	resultClusterGroups := make(map[GroupKey]sets.String)
 
 	includeGroupKeys := pdct.fulfillGroupKeys(groupKeys)
 	for _, groupKey := range includeGroupKeys {
@@ -167,7 +167,7 @@ func (pdct *PlacementDecisionClustersTracker) ExistingClusterGroupsBesides(group
 	pdct.lock.RLock()
 	defer pdct.lock.RUnlock()
 
-	resultClusterGroups := make(map[GroupKey]sets.Set[string])
+	resultClusterGroups := make(map[GroupKey]sets.String)
 
 	excludeGroupKeys := pdct.fulfillGroupKeys(groupKeys)
 	includeGroupKeys := pdct.getGroupKeysBesides(excludeGroupKeys)
@@ -214,7 +214,7 @@ func (pdct *PlacementDecisionClustersTracker) getGroupKeysBesides(groupKeyToExcl
 }
 
 // ClusterGroupsMap is a custom type representing a map of group keys to sets of cluster names.
-type ClusterGroupsMap map[GroupKey]sets.Set[string]
+type ClusterGroupsMap map[GroupKey]sets.String
 
 // GetOrderedGroupKeys returns an ordered slice of GroupKeys, sorted by group index.
 func (g ClusterGroupsMap) GetOrderedGroupKeys() []GroupKey {
@@ -232,8 +232,8 @@ func (g ClusterGroupsMap) GetOrderedGroupKeys() []GroupKey {
 }
 
 // GetClusters returns a set containing all clusters from all group sets.
-func (g ClusterGroupsMap) GetClusters() sets.Set[string] {
-	clusterSet := sets.New[string]()
+func (g ClusterGroupsMap) GetClusters() sets.String {
+	clusterSet := sets.NewString()
 	for _, clusterGroup := range g {
 		clusterSet = clusterSet.Union(clusterGroup)
 	}
